@@ -49,9 +49,12 @@ if (model is not None) and ( record is not None):
   st.dataframe(criteria_df)
 
   tree_index = st.slider("tree index", pred_history.tree_index.min(), pred_history.tree_index.max() )
-  st.line_chart(pred_history, x="tree_index", y="accumulated_score" )
+  #st.line_chart(pred_history, x="tree_index", y="accumulated_score" )
   
   fig = px.line(pred_history, x="tree_index", y="accumulated_score" , title='booster prediction')
+  fig.add_vline(x=tree_index, opacity=0.2 )
+  #fig.add_vline(x=2.5, line_width=3, line_dash="dash", line_color="green")
+  #fig.add_hrect(y0=0.9, y1=2.6, line_width=0, fillcolor="red", opacity=0.2)
   st.plotly_chart(fig, theme="streamlit", use_container_width=True)
 
   #st.dataframe(get_bounded_feature_values_from_model(model , 0 , 3 ) )
