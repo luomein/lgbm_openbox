@@ -1,5 +1,4 @@
 lightgbm==4.3.0
 matplotlib==3.9.0
 graphviz==0.20.3
-scikit-learn==0.24.1
 
