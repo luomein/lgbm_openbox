@@ -1,4 +1,4 @@
 lightgbm==4.3.0
 matplotlib==3.9.0
 graphviz==0.20.3
-
+plotly==5.22.0
