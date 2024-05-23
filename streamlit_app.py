@@ -7,19 +7,28 @@ import lightgbm as lgb
 import pickle
 #import joblib
 import io
+from io import StringIO
 import lgbm_explain
 import graphviz
 
-uploaded_model_file = st.file_uploader("Upload your lgbm model file")
+uploaded_model_file = st.file_uploader("Upload your lgbm model file", type={"txt"})
 upload_record_file =  st.file_uploader("Upload your record", type={"csv"} )
 
 model = None
 record = None
 
 if uploaded_model_file is not None:
-    model_bytes = uploaded_model_file.read()
-    model = pickle.load(io.BytesIO(model_bytes))
-    st.write(model.booster_.params['num_iterations'])
+    model_bytes = io.BytesIO( uploaded_model_file.read() )
+    #model = pickle.load(io.BytesIO(model_bytes))
+    stringio = model_bytes.getvalue()
+    stringio = stringio.decode("utf-8")
+    #stringio = StringIO(uploaded_model_file.getvalue().decode("utf-8"))
+    #stringio = StringIO(uploaded_model_file.getvalue())
+    model = lgb.Booster(model_str=stringio)
+    st.dataframe(data=model.trees_to_dataframe())
+    #st.write(model.booster_.params['num_iterations'])
+    #st.write(model.params['num_iterations'])
+
 if upload_record_file is not None :
     record = pd.read_csv(upload_record_file)
     st.dataframe(data=record)
