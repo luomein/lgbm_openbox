@@ -39,4 +39,9 @@ st.write('Hi!')
 if (model is not None) and ( record is not None):
   st.write( model.predict(record) )
   st.write( model.predict(record , pred_leaf=True ) )
+  
+  pred_history, criteria_df, record_df = lgbm_explain.get_pred_history_df(record , model , record['x']>0 )
+  st.dataframe(pred_history)
   st.graphviz_chart( lgb.create_tree_digraph( model, 0 , example_case = record ))
+
+

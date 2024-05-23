@@ -122,12 +122,24 @@ def get_merged_column_data_criteria_df(model_trees, tree_index, leaf_index,colum
   criteria_df = criteria_df.merge(column_data, how='left', left_on = ['split_feature'] , right_on = 'column_name')
   return criteria_df
 
+def get_feature_name(model):
+    if isinstance( model , lgb.Booster):
+      return model.feature_name()
+    else :
+        return model.feature_name_
+
+def get_booster(model):
+    if isinstance( model , lgb.Booster):
+      return model
+    else :
+        return model.booster_
+    
 def get_row_data_pred_history(model, row_data):
   assert len(row_data) == 1, len(row_data)
-  model_trees = model.booster_.trees_to_dataframe()
+  model_trees = get_booster(model).trees_to_dataframe()
   column_data = row_data.reset_index(drop=True).iloc[0].T.reset_index().set_axis(['column_name', 'column_value'], axis=1)
-  final_score = model.predict(row_data.loc[: ,  model.feature_name_].to_numpy() ,  pred_leaf = False , raw_score = True )[0]
-  leaf_index_list = model.predict(row_data.loc[: ,  model.feature_name_].to_numpy() ,  pred_leaf = True , raw_score = True )[0]
+  final_score = model.predict(row_data.loc[: , get_feature_name(model)].to_numpy() ,  pred_leaf = False , raw_score = True )[0]
+  leaf_index_list = model.predict(row_data.loc[: , get_feature_name(model)].to_numpy() ,  pred_leaf = True , raw_score = True )[0]
   total_score = 0
   pred_history = pd.DataFrame()
   criteria_df = pd.DataFrame()
@@ -191,7 +203,7 @@ def get_tree_split_feature_avg(model_trees_to_dataframe , ax=None):
 def get_used_features(model):
   #pd.set_option('display.max_rows', None)
   feature_importances = pd.DataFrame(data={'importance': model.feature_importances_ ,
-                  'column_name' : model.feature_name_}).sort_values(by=['importance'], ascending=False)
+                  'column_name' :get_feature_name(model)}).sort_values(by=['importance'], ascending=False)
   feature_importances['original_feature'] = feature_importances['column_name'].replace(regex=[r'_sum$',r'_diff$',r'_max$',r'_countd$',r'_min$',r'_positive_lag$',r'_negative_lag$'], value='' )
   feature_importances['original_feature_sum'] = feature_importances.groupby('original_feature')['importance'].transform('sum')          
   total_split_feature_count = len(feature_importances[feature_importances.importance	> 0 ])
