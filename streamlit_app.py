@@ -52,7 +52,7 @@ def check_df_column_type(df, selected_columns):
 
 
 if (model is not None) and ( record is not None):
-  record_num = check_df_column_type(record , lgbm_explain.get_feature_name(model) )[[ lgbm_explain.get_feature_name(model)]]
+  record_num = check_df_column_type(record , lgbm_explain.get_feature_name(model) )[ lgbm_explain.get_feature_name(model)]
 
   st.write( model.predict(record_num) )
   st.write( model.predict(record_num , pred_leaf=True ) )
