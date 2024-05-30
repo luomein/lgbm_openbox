@@ -52,11 +52,11 @@ def check_df_column_type(df, selected_columns):
 
 
 if (model is not None) and ( record is not None):
-  record = check_df_column_type(record , lgbm_explain.get_feature_name(model) )
+  record_num = check_df_column_type(record , lgbm_explain.get_feature_name(model) )[[ lgbm_explain.get_feature_name(model)]]
 
-  st.write( model.predict(record) )
-  st.write( model.predict(record , pred_leaf=True ) )
-  pred_history, criteria_df, record_df = lgbm_explain.get_pred_history_df(record , model , record['x']>0 )
+  st.write( model.predict(record_num) )
+  st.write( model.predict(record_num , pred_leaf=True ) )
+  pred_history, criteria_df, record_df = lgbm_explain.get_pred_history_df(record_num , model , record['x']>0 )
   st.dataframe(record_df)
   st.dataframe(pred_history)
   
@@ -74,7 +74,7 @@ if (model is not None) and ( record is not None):
 
 
   #st.dataframe(get_bounded_feature_values_from_model(model , 0 , 3 ) )
-  st.graphviz_chart( lgb.create_tree_digraph( model, 0 , example_case = record ))
+  st.graphviz_chart( lgb.create_tree_digraph( model, 0 , example_case = record_num ))
 
 #### https://github.com/streamlit/streamlit/issues/455#issuecomment-1811044197
 
