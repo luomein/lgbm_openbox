@@ -56,7 +56,8 @@ if (model is not None) and ( record is not None):
 
   st.write( model.predict(record_num) )
   st.write( model.predict(record_num , pred_leaf=True ) )
-  pred_history, criteria_df, record_df = lgbm_explain.get_pred_history_df(record_num , model , record['x']>0 )
+  target_index = 0
+  pred_history, criteria_df, record_df = lgbm_explain.get_pred_history_df(record_num , model ,record_num.index == target_index )
   st.dataframe(record_df)
   st.dataframe(pred_history)
   
