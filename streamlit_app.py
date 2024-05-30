@@ -12,6 +12,7 @@ import lgbm_explain
 import graphviz
 import plotly.figure_factory as ff
 import plotly.express as px
+from pandas.api.types import is_numeric_dtype
 
 uploaded_model_file = st.file_uploader("Upload your lgbm model file", type={"txt"})
 upload_record_file =  st.file_uploader("Upload your record", type={"csv"} )
