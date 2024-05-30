@@ -51,9 +51,10 @@ def check_df_column_type(df, selected_columns):
 
 
 if (model is not None) and ( record is not None):
+  record = check_df_column_type(record , lgbm_explain.get_feature_name(model) )
+
   st.write( model.predict(record) )
   st.write( model.predict(record , pred_leaf=True ) )
-  record = check_df_column_type(record , lgbm_explain.get_feature_name(model) )
   pred_history, criteria_df, record_df = lgbm_explain.get_pred_history_df(record , model , record['x']>0 )
   st.dataframe(record_df)
   st.dataframe(pred_history)
