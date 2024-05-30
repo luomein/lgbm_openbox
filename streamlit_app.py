@@ -37,12 +37,23 @@ if upload_record_file is not None :
  
 
 #st.write('Hi!')
+def check_df_column_type(df, selected_columns):
+  bypass_features = ["pending_error_count_4_8_positive_lag", "pending_error_count_4_8_negative_lag"]
+  for c in selected_columns :
+    if (not c in df.columns.tolist() )  and (c in bypass_features) :
+        df[c] = 0
+    if not is_numeric_dtype(df[c]) :
+        df.loc[df[c]=='', c] = 0
+        df = df.astype({c: float})
+        assert is_numeric_dtype(df[c]) , f"{c} is not numeric"
+    print(c , is_numeric_dtype(df[c]) , df[c].values)    
+  return df
 
 
 if (model is not None) and ( record is not None):
   st.write( model.predict(record) )
   st.write( model.predict(record , pred_leaf=True ) )
-  
+  record = check_df_column_type(record , lgbm_explain.get_feature_name(model) )
   pred_history, criteria_df, record_df = lgbm_explain.get_pred_history_df(record , model , record['x']>0 )
   st.dataframe(record_df)
   st.dataframe(pred_history)
