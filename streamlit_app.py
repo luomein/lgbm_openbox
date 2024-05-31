@@ -51,18 +51,18 @@ def check_df_column_type(df, selected_columns):
   return df
 
 
-if (model is not None) and ( record is not None):
+if (model is not None) and ( record is not None) and len(record) > 0 :
+  target_index = st.slider("record index" , 0 , len(record) - 1 )
   record_num = check_df_column_type(record , lgbm_explain.get_feature_name(model) )[ lgbm_explain.get_feature_name(model)]
-
+  
   st.write( model.predict(record_num) )
   st.write( model.predict(record_num , pred_leaf=True ) )
-  target_index = 0
   pred_history, criteria_df, record_df = lgbm_explain.get_pred_history_df(record_num , model ,record_num.index == target_index )
   st.dataframe(record_df)
   st.dataframe(pred_history)
   
   tree_index = st.slider("tree index", pred_history.tree_index.min(), pred_history.tree_index.max() )
-  #st.line_chart(pred_history, x="tree_index", y="accumulated_score" )
+   #st.line_chart(pred_history, x="tree_index", y="accumulated_score" )
   st.dataframe(criteria_df[criteria_df.tree_index ==tree_index  ] )
 
 
