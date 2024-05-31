@@ -53,11 +53,13 @@ def check_df_column_type(df, selected_columns):
 
 if (model is not None) and ( record is not None) and len(record) > 0 :
   target_index = st.slider("record index" , 0 , len(record) - 1 )
+  record = record.iloc[target_index : (target_index + 1) ].reset_index(drop=True)
+  assert len(record) == 1 
   record_num = check_df_column_type(record , lgbm_explain.get_feature_name(model) )[ lgbm_explain.get_feature_name(model)]
   
   st.write( model.predict(record_num) )
   st.write( model.predict(record_num , pred_leaf=True ) )
-  pred_history, criteria_df, record_df = lgbm_explain.get_pred_history_df(record_num , model ,record_num.index == target_index )
+  pred_history, criteria_df, record_df = lgbm_explain.get_pred_history_df(record_num , model ,record_num.index == 0 )
   st.dataframe(record_df)
   st.dataframe(pred_history)
   
