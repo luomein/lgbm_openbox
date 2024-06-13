@@ -19,7 +19,10 @@ import lgbm_helper
 st.sidebar.title("Input")
 st.sidebar.markdown("[Model Upload](#model_upload)")
 st.sidebar.markdown("[Data Upload](#data_upload)")
-st.divider()
+st.sidebar.markdown("[Validation](#validation)")
+
+#st.divider()
+st.sidebar.title("Prediction")
 st.sidebar.title("Analysis")
 
 
@@ -28,26 +31,26 @@ st.sidebar.title("Analysis")
 st.header('Model Upload' , anchor = 'model_upload')
 static_components.model_txt_hint_expander()
 model = lgbm_helper.get_model(st.file_uploader("Upload your lgbm model file", type={"txt"}))
-st.write('Model Summary')
 static_components.model_summary_tabs(model)
 
-
+st.header('Data Upload' , anchor = 'data_upload')
 record = None
+def get_dataframe(filepath_or_bufferstr):
+    if not filepath_or_bufferstr is None:
+        return pd.read_csv(filepath_or_bufferstr)
+    else :
+        return None
+
+df =  get_dataframe( st.file_uploader("Upload your dataset", type={"csv"} ) )
+static_components.dataset_summary_tabs(df)
 
 
+st.header('Validation' , anchor = 'validation')
+static_components.dataset_validation(df,model)
 
-
-
-#model_summary(model)
-
-
-upload_record_file =  st.file_uploader("Upload your dataset", type={"csv"} )
-
-
-
-if upload_record_file is not None :
-    record = pd.read_csv(upload_record_file)
-    st.dataframe(data=record)
+#if upload_record_file is not None :
+#    record = pd.read_csv(upload_record_file)
+#    st.dataframe(data=record)
  
 
 #st.write('Hi!')

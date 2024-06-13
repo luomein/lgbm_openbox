@@ -1,5 +1,6 @@
 import streamlit as st
 import lgbm_helper
+import pandas as pd
 
 
 def model_txt_hint_expander():
@@ -41,6 +42,7 @@ def model_summary_parameters_df(model):
         st.write('empty')
 
 def model_summary_tabs(model):
+  st.write('Model Summary')  
   if model is None :
    model_parameters, model_features , model_trees = st.tabs(["Parameters" , "Features" , "Trees"])
    with model_parameters:
@@ -63,4 +65,29 @@ def model_summary_tabs(model):
       with model_trees:
           st.dataframe(tree_summary_df, use_container_width=True)
 
+def dataset_summary_tabs(df):
+    st.write('Dataset Summary')
+    if df is None :
+        df_columns, df_records = st.tabs(["Columns" , "Records"])
+        with df_columns:
+            st.write('empty')
+        with df_records :
+            st.write('empty')
+    else :
+        df_columns, df_records = st.tabs([f"Columns({len(df.columns)})" , f"Records({len(df)})"])
+        with df_columns:
+            st.dataframe( pd.DataFrame(df.columns.tolist() , columns=['column']) , use_container_width=True)
+        with df_records :
+            st.dataframe( df , use_container_width=True)
 
+def dataset_validation(df,model):
+    if df is None or model is None :
+        st.write('empty')
+    else:
+        if set(lgbm_helper.get_feature_name(model)) <= set(df.columns.tolist()):
+            st.write('✅ Dataset columns match model features.')
+        else:    
+            st.write("⚠️ Dataset columns do not match model features")
+            missing_columns = list(set(lgbm_helper.get_feature_name(model)) - set(df.columns.tolist()))
+            st.write(f"Missing columns: [{','.join(missing_columns)}]")
+            
