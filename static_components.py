@@ -99,9 +99,27 @@ def dataset_validation(df,model):
 def show_prediction(df,model,valid):
     if df is None or model is None or not valid :
         st.write('empty')
+        return False
     else:
         prediction = model.predict(df[lgbm_helper.get_feature_name(model)])
         #st.write(prediction)
         #st.dataframe(prediction)
         st.dataframe( pd.DataFrame(prediction , columns=['prediction']) ,  use_container_width=True)
+        return True
 
+def show_prediction_history(df,model,show_prediction):
+    
+    if df is None or model is None or not show_prediction :
+        return
+        #st.write('empty')
+        #return False
+    else:
+       bst =  lgbm_helper.get_booster(model)
+       tree_detail = bst.trees_to_dataframe()
+
+       tree_index = st.slider("tree index", tree_detail.tree_index.min(), tree_detail.tree_index.max() )
+       if len(df) > 1:
+         target_index = st.slider("record index" , 0 , len(df) - 1 )
+       else:
+         target_index = 0
+         st.write(f"record index: {target_index}")

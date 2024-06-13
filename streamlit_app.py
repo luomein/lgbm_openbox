@@ -48,7 +48,8 @@ st.header('Validation' , anchor = 'validation')
 dataset_validation = static_components.dataset_validation(df,model)
 
 st.header('Prediction', anchor = 'prediction') 
-static_components.show_prediction(df,model,dataset_validation)
+show_prediction = static_components.show_prediction(df,model,dataset_validation)
+static_components.show_prediction_history(df,model,show_prediction) 
 
 #st.write('Hi!')
 def check_df_column_type(df, selected_columns):
