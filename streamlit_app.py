@@ -20,10 +20,9 @@ st.sidebar.title("Input")
 st.sidebar.markdown("[Model Upload](#model_upload)")
 st.sidebar.markdown("[Data Upload](#data_upload)")
 st.sidebar.markdown("[Validation](#validation)")
-
 #st.divider()
-st.sidebar.title("Prediction")
 st.sidebar.title("Analysis")
+st.sidebar.markdown("[Prediction](#prediction)")
 
 
 
@@ -46,12 +45,10 @@ static_components.dataset_summary_tabs(df)
 
 
 st.header('Validation' , anchor = 'validation')
-static_components.dataset_validation(df,model)
+dataset_validation = static_components.dataset_validation(df,model)
 
-#if upload_record_file is not None :
-#    record = pd.read_csv(upload_record_file)
-#    st.dataframe(data=record)
- 
+st.header('Prediction', anchor = 'prediction') 
+static_components.show_prediction(df,model,dataset_validation)
 
 #st.write('Hi!')
 def check_df_column_type(df, selected_columns):

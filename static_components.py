@@ -86,8 +86,19 @@ def dataset_validation(df,model):
     else:
         if set(lgbm_helper.get_feature_name(model)) <= set(df.columns.tolist()):
             st.write('✅ Dataset columns match model features.')
+            return True
         else:    
             st.write("⚠️ Dataset columns do not match model features")
             missing_columns = list(set(lgbm_helper.get_feature_name(model)) - set(df.columns.tolist()))
             st.write(f"Missing columns: [{','.join(missing_columns)}]")
-            
+    return False
+
+def show_prediction(df,model,valid):
+    if df is None or model is None or not valid :
+        st.write('empty')
+    else:
+        prediction = model.predict(df[lgbm_helper.get_feature_name(model)])
+        #st.write(prediction)
+        #st.dataframe(prediction)
+        st.dataframe( pd.DataFrame(prediction , columns=['prediction']) ,  use_container_width=True)
+
