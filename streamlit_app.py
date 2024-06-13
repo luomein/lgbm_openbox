@@ -29,7 +29,7 @@ st.header('Model Upload' , anchor = 'model_upload')
 static_components.model_txt_hint_expander()
 model = lgbm_helper.get_model(st.file_uploader("Upload your lgbm model file", type={"txt"}))
 st.write('Model Summary')
-model_configuration, model_features , model_trees = st.tabs(["Features" , "Trees"])
+model_configuration, model_features , model_trees = st.tabs(["Configuration" , "Features" , "Trees"])
 with model_configuration:
   static_components.model_summary_configuration_df(model)
 with model_features:
