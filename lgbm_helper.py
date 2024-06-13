@@ -67,3 +67,14 @@ def get_feature_summary_df(model):
     'Max Value': max_vals
     })
     return df
+
+def get_configuration_df(model):
+    bst =  get_booster(model)
+    model_details = bst.dump_model()
+    model_configuration = dict()
+    for k in model_details.keys():
+      if not k in ['tree_info' , 'feature_names' , 'feature_importances' , 'feature_infos'] :
+      #print(k , model_details[k])
+        model_configuration[k] = model_details[k]
+
+    return pd.DataFrame([ model_configuration ]).T.reset_index(drop=False).set_axis(['key','value'], axis=1)

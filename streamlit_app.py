@@ -29,13 +29,12 @@ st.header('Model Upload' , anchor = 'model_upload')
 static_components.model_txt_hint_expander()
 model = lgbm_helper.get_model(st.file_uploader("Upload your lgbm model file", type={"txt"}))
 st.write('Model Summary')
-model_features , model_trees = st.tabs(["Features" , "Trees"])
-static_components.model_summary_features_df(model)
+model_configuration, model_features , model_trees = st.tabs(["Features" , "Trees"])
+with model_configuration:
+  static_components.model_summary_configuration_df(model)
+with model_features:
+  static_components.model_summary_features_df(model)
 
-def model_summary(model):
-  with st.expander("📊 Model Summary", model  is not None):
-      if  model  is not None :
-        st.write(lgbm_explain.get_feature_name(model))
 
 record = None
 

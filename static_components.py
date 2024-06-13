@@ -31,3 +31,12 @@ lgb_model_booster.save_model('model_booster.txt')
 def model_summary_features_df(model):
     if not model is None :
       st.dataframe(lgbm_helper.get_feature_summary_df(model), use_container_width=True)
+    else:
+        st.write('empty')
+
+def model_summary_configuration_df(model):
+    if not model is None :
+      st.dataframe(lgbm_helper.get_configuration_df(model), use_container_width=True)
+    else:
+        st.write('empty')
+
