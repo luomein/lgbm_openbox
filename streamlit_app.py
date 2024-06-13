@@ -13,12 +13,30 @@ import graphviz
 import plotly.figure_factory as ff
 import plotly.express as px
 from pandas.api.types import is_numeric_dtype
+import static_components
 
-uploaded_model_file = st.file_uploader("Upload your lgbm model file", type={"txt"})
-upload_record_file =  st.file_uploader("Upload your record", type={"csv"} )
+st.sidebar.title("Input")
+st.sidebar.markdown("[Model Upload](#model_upload)")
+st.sidebar.markdown("[Data Upload](#data_upload)")
+st.divider()
+st.sidebar.title("Analysis")
+
+
+
+
+st.header('Model Upload' , anchor = 'model_upload')
+static_components.model_txt_hint_expander()
+
+def model_summary(model):
+  with st.expander("📊 Model Summary", model  is not None):
+      if  model  is not None :
+        st.write(lgbm_explain.get_feature_name(model))
 
 model = None
 record = None
+
+uploaded_model_file = st.file_uploader("Upload your lgbm model file", type={"txt"})
+
 
 if uploaded_model_file is not None:
     model_bytes = io.BytesIO( uploaded_model_file.read() )
@@ -31,6 +49,16 @@ if uploaded_model_file is not None:
     st.dataframe(data=model.trees_to_dataframe())
     #st.write(model.booster_.params['num_iterations'])
     #st.write(model.params['num_iterations'])
+
+
+st.write('Model Summary')
+model_features , model_trees = st.tabs(["Features" , "Trees"])
+model_summary(model)
+
+
+upload_record_file =  st.file_uploader("Upload your dataset", type={"csv"} )
+
+
 
 if upload_record_file is not None :
     record = pd.read_csv(upload_record_file)
@@ -83,3 +111,5 @@ if (model is not None) and ( record is not None) and len(record) > 0 :
 
 ### https://docs.streamlit.io/develop/api-reference/charts/st.plotly_chart
 ### ff.create_distplot
+
+st.header('Conclusion' , anchor = 'conclusion')
