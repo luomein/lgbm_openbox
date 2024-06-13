@@ -67,8 +67,23 @@ def get_feature_summary_df(model):
     'Max Value': max_vals
     })
     return df
+def get_tree_summary(model):
+    bst =  get_booster(model)
+    model_details = bst.dump_model()
+    selected_tree_columns = ['tree_index', 'num_leaves', 'num_cat', 'shrinkage' ]
+    tree_info = [ {k : tree[k] for k in selected_tree_columns } for tree in model_details['tree_info'] ]
+    tree_info = pd.DataFrame(tree_info)
+    tree_detail = model.trees_to_dataframe()
+    tree_detail = tree_detail.groupby('tree_index').agg(max_node_depth = ('node_depth' , 'max')
+                                                        , count_distinct_features = ('split_feature' , 'nunique')
+                                                        , num_nodes=('node_index','nunique') 
+                                                        , count_rows=('node_index','count')).reset_index(drop=False)
+    assert len(tree_detail[tree_detail['num_nodes'] == tree_detail['count_rows']] ) == len(tree_detail)
+    tree_detail = tree_detail.drop(columns = 'count_rows' )
+    assert len(tree_detail) == len(tree_info)
+    return tree_info.merge(tree_detail , on=['tree_index'])
 
-def get_configuration_df(model):
+def get_parameter_df(model):
     bst =  get_booster(model)
     model_details = bst.dump_model()
     model_configuration = dict()

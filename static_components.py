@@ -34,9 +34,33 @@ def model_summary_features_df(model):
     else:
         st.write('empty')
 
-def model_summary_configuration_df(model):
+def model_summary_parameters_df(model):
     if not model is None :
-      st.dataframe(lgbm_helper.get_configuration_df(model), use_container_width=True)
+      st.dataframe(lgbm_helper.get_parameter_df(model), use_container_width=True)
     else:
         st.write('empty')
+
+def model_summary_tabs(model):
+  if model is None :
+   model_parameters, model_features , model_trees = st.tabs(["Parameters" , "Features" , "Trees"])
+   with model_parameters:
+    st.write('empty')
+   with  model_features :
+    st.write('empty')
+   with model_trees :
+    st.write('empty')
+
+  else:
+      feature_summary_df = lgbm_helper.get_feature_summary_df(model)
+      tree_summary_df = lgbm_helper.get_tree_summary(model)
+      model_parameters, model_features , model_trees = st.tabs(["Parameters" , f"Features({len(feature_summary_df)})" , f"Trees({len(tree_summary_df)})"])
+
+      with model_parameters:
+        #st.write(dir(model_parameters))
+        model_summary_parameters_df(model)
+      with model_features:
+        st.dataframe(feature_summary_df, use_container_width=True)
+      with model_trees:
+          st.dataframe(tree_summary_df, use_container_width=True)
+
 
