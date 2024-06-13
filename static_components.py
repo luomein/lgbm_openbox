@@ -84,11 +84,14 @@ def dataset_validation(df,model):
     if df is None or model is None :
         st.write('empty')
     else:
+        if len(df) == 0 :
+            st.write('⚠️  Dataset is empty')
+            return False
         if set(lgbm_helper.get_feature_name(model)) <= set(df.columns.tolist()):
             st.write('✅ Dataset columns match model features.')
             return True
         else:    
-            st.write("⚠️ Dataset columns do not match model features")
+            st.write("⚠️  Dataset columns do not match model features")
             missing_columns = list(set(lgbm_helper.get_feature_name(model)) - set(df.columns.tolist()))
             st.write(f"Missing columns: [{','.join(missing_columns)}]")
     return False

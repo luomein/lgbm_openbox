@@ -97,4 +97,4 @@ if (model is not None) and ( record is not None) and len(record) > 0 :
 ### https://docs.streamlit.io/develop/api-reference/charts/st.plotly_chart
 ### ff.create_distplot
 
-st.header('Conclusion' , anchor = 'conclusion')
+
