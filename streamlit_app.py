@@ -14,6 +14,7 @@ import plotly.figure_factory as ff
 import plotly.express as px
 from pandas.api.types import is_numeric_dtype
 import static_components
+import lgbm_helper
 
 st.sidebar.title("Input")
 st.sidebar.markdown("[Model Upload](#model_upload)")
@@ -26,34 +27,23 @@ st.sidebar.title("Analysis")
 
 st.header('Model Upload' , anchor = 'model_upload')
 static_components.model_txt_hint_expander()
+model = lgbm_helper.get_model(st.file_uploader("Upload your lgbm model file", type={"txt"}))
+st.write('Model Summary')
+model_features , model_trees = st.tabs(["Features" , "Trees"])
+static_components.model_summary_features_df(model)
 
 def model_summary(model):
   with st.expander("📊 Model Summary", model  is not None):
       if  model  is not None :
         st.write(lgbm_explain.get_feature_name(model))
 
-model = None
 record = None
 
-uploaded_model_file = st.file_uploader("Upload your lgbm model file", type={"txt"})
 
 
-if uploaded_model_file is not None:
-    model_bytes = io.BytesIO( uploaded_model_file.read() )
-    #model = pickle.load(io.BytesIO(model_bytes))
-    stringio = model_bytes.getvalue()
-    stringio = stringio.decode("utf-8")
-    #stringio = StringIO(uploaded_model_file.getvalue().decode("utf-8"))
-    #stringio = StringIO(uploaded_model_file.getvalue())
-    model = lgb.Booster(model_str=stringio)
-    st.dataframe(data=model.trees_to_dataframe())
-    #st.write(model.booster_.params['num_iterations'])
-    #st.write(model.params['num_iterations'])
 
 
-st.write('Model Summary')
-model_features , model_trees = st.tabs(["Features" , "Trees"])
-model_summary(model)
+#model_summary(model)
 
 
 upload_record_file =  st.file_uploader("Upload your dataset", type={"csv"} )

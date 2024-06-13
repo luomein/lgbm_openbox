@@ -1,5 +1,5 @@
 import streamlit as st
-
+import lgbm_helper
 
 
 def model_txt_hint_expander():
@@ -11,7 +11,7 @@ import lightgbm as lgbm
 
 lgb_model = lgbm.LGBMRegressor()
 lgb_model.fit(X_train, y_train, eval_set=[(X_test, y_test)])
-lgb_model.booster_.save_model('mode.txt')
+lgb_model.booster_.save_model('model.txt')
 '''
     st.code(code, language='python')
 
@@ -28,4 +28,6 @@ lgb_model_booster.save_model('model_booster.txt')
 '''
     st.code(code2, language='python')
 
-
+def model_summary_features_df(model):
+    if not model is None :
+      st.dataframe(lgbm_helper.get_feature_summary_df(model), use_container_width=True)
