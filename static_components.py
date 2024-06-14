@@ -55,7 +55,7 @@ def model_summary_tabs(model):
     st.write('empty')
    with model_trees :
     st.write('empty')
-
+   return None
   else:
       feature_summary_df = lgbm_helper.get_feature_summary_df(model)
       tree_summary_df = lgbm_helper.get_tree_summary(model)
@@ -68,7 +68,7 @@ def model_summary_tabs(model):
         st.dataframe(feature_summary_df, use_container_width=True)
       with model_trees:
           st.dataframe(tree_summary_df, use_container_width=True)
-
+      return tree_summary_df
 def dataset_summary_tabs(df):
     st.write('Dataset Summary')
     if df is None :
@@ -104,7 +104,19 @@ def dataset_validation(df,model):
             st.write(f"Missing columns: [{','.join(missing_columns)}]")
     return False
 
-def show_prediction(df,model,valid):
+#styled_df = df.style.apply(lambda row: highlight_row(row, row_to_highlight), axis=1)
+def highlight_row(row, row_to_highlight_value  ):
+    color = 'background-color: yellow'  # Define the highlight color
+    #color2 = 'background-color: red' 
+    #st.write(row.index)
+    #st.write(row.name)
+    if row.name == row_to_highlight_value:
+        return [color] * len(row)
+    else:
+        #return [color2] * len(row)
+
+        return [''] * len(row)
+def show_prediction(df,model,valid, record_index):
     if df is None or model is None or not valid :
         st.write('empty')
         return False
@@ -112,10 +124,12 @@ def show_prediction(df,model,valid):
         prediction = model.predict(df[lgbm_helper.get_feature_name(model)])
         #st.write(prediction)
         #st.dataframe(prediction)
-        st.dataframe( pd.DataFrame(prediction , columns=['prediction']).rename_axis('record_index') ,  use_container_width=True)
+        prediction_df = pd.DataFrame(prediction , columns=['prediction']).rename_axis('record_index')
+        prediction_df = prediction_df.style.apply(lambda row:highlight_row(row, record_index  ) , axis = 1 )
+        st.dataframe(prediction_df  ,  use_container_width=True)
         return True
 
-def show_booster_detail(df,model,show_prediction):
+def show_booster_detail(df,model,show_prediction, tree_index,target_index):
     
     if df is None or model is None or not show_prediction :
         st.header('Booster Detail', anchor = 'booster') 
@@ -123,20 +137,13 @@ def show_booster_detail(df,model,show_prediction):
         st.header('Individual Tree Detail', anchor = 'tree') 
         st.write('empty')
 
-        return None , None
+        #return None , None
         #return False
     else:
        st.header('Booster Detail', anchor = 'booster') 
        bst =  lgbm_helper.get_booster(model)
        tree_detail = bst.trees_to_dataframe()
-
-       tree_index = st.slider("tree_index", tree_detail.tree_index.min(), tree_detail.tree_index.max() )
-       if len(df) > 1:
-         target_index = st.slider("record_index" , 0 , len(df) - 1 )
-       else:
-         target_index = 0
-         st.write(f"record_index: {target_index}")
-
+       
        record_df = df.iloc[target_index: (target_index + 1)][lgbm_helper.get_feature_name(model)]
        leaf_indices = bst.predict(record_df,  pred_leaf=True)[0]
        prediction = bst.predict( record_df ,  pred_leaf=False)[0]
@@ -149,13 +156,17 @@ def show_booster_detail(df,model,show_prediction):
        leaf_output['prediction'] = leaf_output['value'].cumsum()
        criteria_df = lgbm_helper.get_booster_nested_criteria(tree_detail ,leaf_indices.tree_index.values.tolist() , leaf_indices.node_index.values.tolist() )
        criteria_df = criteria_df.merge(record_df.T.rename_axis('split_feature').set_axis(['record_value'], axis=1) , on='split_feature'  )
+       st.write(f"record_index: {target_index}, prediction: { leaf_output.loc[ leaf_output.tree_index == tree_detail.tree_index.max()  ,'prediction'].values[0] }")
        booster_prediction , split_features = st.tabs(['Booster Prediction', 'Split Features'])
        with booster_prediction:
-         plot_booster_prediction(leaf_output , tree_index)
+         
+         plot_booster_prediction(leaf_output , tree_index )
        with split_features:
            #st.dataframe(criteria_df)
            show_split_features(df , target_index , criteria_df )
+       
        st.header('Individual Tree Detail', anchor = 'tree') 
+       st.write(f"tree_index: {tree_index}, leaf_index: { leaf_indices.loc[leaf_indices.tree_index == tree_index , 'node_index'].values[0] }, leaf_output: { leaf_output.loc[leaf_output.tree_index == tree_index , 'value'].values[0] }")
        tree_split_features ,tree_digraph = st.tabs([ 'Tree Split Features' , 'Tree Path'])
        with tree_split_features :
            #st.write('test')
@@ -168,15 +179,14 @@ def show_booster_detail(df,model,show_prediction):
          st.graphviz_chart( lgb.create_tree_digraph( model, tree_index , example_case = record_df ))
 
 
-       return tree_index, target_index
+       #return tree_index, target_index
    
 def show_split_features(df , record_index , criteria_df ):
     for f in criteria_df.split_feature.unique().tolist():
         with st.expander(f"{f}: {df.iloc[record_index][f]}"):
           st.dataframe(criteria_df.loc[criteria_df.split_feature == f , [ 'tree_index' ,'node_index' , 'split_feature','decision_type','threshold' , 'include_na'] ].set_index('tree_index') 
                         ,  use_container_width=True)
-
-def plot_booster_prediction(leaf_output , tree_index):
+def plot_booster_prediction(leaf_output , tree_index  ):
 
        fig2 = go.Figure(go.Waterfall(
          name="booster prediction",
@@ -188,6 +198,9 @@ def plot_booster_prediction(leaf_output , tree_index):
     y=leaf_output['value'],
     connector={"line":{"color":"rgb(63, 63, 63)"}},
 ))
+       #if tree_index is not None:
+       #if 'tree_index' in st.session_state :
+       #    tree_index =st.session_state.tree_index 
        fig2.add_vline(x=tree_index, opacity=0.2 )
        fig2.add_hline(y=leaf_output.loc[leaf_output.tree_index == tree_index , 'prediction' ].values[0] , opacity=0.2 ) 
        
@@ -198,6 +211,27 @@ def plot_booster_prediction(leaf_output , tree_index):
     showlegend=False
 )
 
-       st.plotly_chart(fig2, theme="streamlit", use_container_width=True)
-
-
+       #selection = 
+       st.plotly_chart(fig2, theme="streamlit", use_container_width=True
+                       #, on_select="rerun"
+                       #, selection_mode=('points')
+                       )
+#{
+#  "selection": {
+#    "points": [
+#      {
+#        "curve_number": 0,
+#        "point_number": 81,
+#        "point_index": 81,
+#        "x": 81,
+#        "y": 111.09984958888656,
+#        "measure": "relative"
+#      }
+#    ],
+#    "point_indices": [
+#      81
+#    ],
+#    "box": [],
+#    "lasso": []
+#  }
+#}
