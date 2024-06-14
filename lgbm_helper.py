@@ -97,20 +97,21 @@ def get_parameter_df(model):
 def get_node_row(model_trees, tree_index, node_index):
   return model_trees.loc[(model_trees.tree_index == tree_index) & (model_trees.node_index == node_index) ]
 
-def get_criteria_output_string(split_feature,decision_type, threshold, value , node_index ):
-  return f"( {node_index} {split_feature} {decision_type} {threshold} ) --> {value}"
-def get_criteria_output_collection(split_feature,decision_type, threshold, value , node_index ):
+def get_criteria_output_string(split_feature,decision_type, threshold, value , node_index , include_na ):
+  return f"( {node_index} {split_feature} {decision_type} {threshold} {'or na' if include_na else ''} ) --> {value}"
+def get_criteria_output_collection(split_feature,decision_type, threshold, value , node_index , include_na ):
     return {"node_index" : node_index ,
           "split_feature": split_feature,
           "decision_type" :decision_type,
           "threshold": threshold ,
+            "include_na" : include_na,
           "value": value }
 def get_negative_decision_type(decision_type):
   assert decision_type in ['<=','>=']
   if decision_type == '<=':
-    return 'is na or >'
+    return '>'
   if decision_type == '>=':
-    return 'is na or <'
+    return '<'
 
 
 def get_criteria(model_trees, tree_index, node_index, output_function ):
@@ -126,10 +127,16 @@ def get_criteria(model_trees, tree_index, node_index, output_function ):
   threshold = parent_node_row['threshold'].values[0]
   left_child = parent_node_row['left_child'].values[0]
   right_child = parent_node_row['right_child'].values[0]
+  missing_type =  parent_node_row['missing_type'].values[0]
+  missing_direction =  parent_node_row['missing_direction'].values[0]
+  #assert ( missing_direction in ['left', 'right'] ) == ( missing_type == 'NaN' ) , f"{missing_direction} , {missing_type}"
+
   if left_child == node_index :
-    criteria = output_function(split_feature,decision_type, threshold, node_value, node_index) #f"( {split_feature} {decision_type} {threshold} )"
+    include_na = (missing_direction == 'left')  
+    criteria = output_function(split_feature,decision_type, threshold, node_value, node_index , include_na) #f"( {split_feature} {decision_type} {threshold} )"
   if right_child == node_index :
-    criteria = output_function(split_feature,get_negative_decision_type(decision_type), threshold, node_value , node_index ) #f"( {split_feature} {get_negative_decision_type(decision_type)} {threshold} )"
+    include_na = (missing_direction == 'right')    
+    criteria = output_function(split_feature,get_negative_decision_type(decision_type), threshold, node_value , node_index , include_na ) #f"( {split_feature} {get_negative_decision_type(decision_type)} {threshold} )"
   return  criteria
 
 def get_nested_criteria(model_trees, tree_index, node_index, output_function = get_criteria_output_string, criteria_list=[]):

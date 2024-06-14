@@ -81,9 +81,9 @@ def dataset_summary_tabs(df):
         df_columns, df_records = st.tabs([f"Columns({len(df.columns)})" , f"Records({len(df)})"])
         with df_columns:
             describe_df = pd.DataFrame(df.describe()).T.rename_axis('column').reset_index(drop=False)[['column','min','max']]
-            df = pd.DataFrame(df.columns.tolist() , columns=['column']) 
-            df = df.merge(describe_df , on='column', how='left')
-            st.dataframe(df , use_container_width=True)
+            df_c = pd.DataFrame(df.columns.tolist() , columns=['column']) 
+            df_c = df_c.merge(describe_df , on='column', how='left')
+            st.dataframe(df_c , use_container_width=True)
             #st.dataframe( pd.DataFrame(df.columns.tolist() , columns=['column']) , use_container_width=True)
         with df_records :
             st.dataframe( df , use_container_width=True)
@@ -137,8 +137,8 @@ def show_booster_detail(df,model,show_prediction):
          target_index = 0
          st.write(f"record_index: {target_index}")
 
-       leaf_indices = bst.predict(df.iloc[target_index : (target_index + 1)][lgbm_helper.get_feature_name(model)],  pred_leaf=True)[0]
        record_df = df.iloc[target_index: (target_index + 1)][lgbm_helper.get_feature_name(model)]
+       leaf_indices = bst.predict(record_df,  pred_leaf=True)[0]
        prediction = bst.predict( record_df ,  pred_leaf=False)[0]
 
        leaf_indices = pd.DataFrame(data={'tree_index' : list(range(len(leaf_indices))) , 
@@ -148,7 +148,7 @@ def show_booster_detail(df,model,show_prediction):
        leaf_output = tree_detail.merge(leaf_indices , on = ['tree_index' , 'node_index'] , how = 'inner')
        leaf_output['prediction'] = leaf_output['value'].cumsum()
        criteria_df = lgbm_helper.get_booster_nested_criteria(tree_detail ,leaf_indices.tree_index.values.tolist() , leaf_indices.node_index.values.tolist() )
-
+       criteria_df = criteria_df.merge(record_df.T.rename_axis('split_feature').set_axis(['record_value'], axis=1) , on='split_feature'  )
        booster_prediction , split_features = st.tabs(['Booster Prediction', 'Split Features'])
        with booster_prediction:
          plot_booster_prediction(leaf_output , tree_index)
@@ -159,7 +159,10 @@ def show_booster_detail(df,model,show_prediction):
        tree_split_features ,tree_digraph = st.tabs([ 'Tree Split Features' , 'Tree Path'])
        with tree_split_features :
            #st.write('test')
-           st.dataframe(criteria_df.loc[criteria_df.tree_index == tree_index , [ 'tree_index' ,'node_index' , 'split_feature','decision_type','threshold'] ].set_index('tree_index') )
+           #st.dataframe(criteria_df[criteria_df.tree_index == tree_index ] ) 
+           st.dataframe(criteria_df.loc[criteria_df.tree_index == tree_index
+                                        , [ 'tree_index' ,'node_index' , 'split_feature','decision_type','threshold', 'include_na','record_value'] ].set_index('tree_index') 
+                        ,  use_container_width=True)
 
        with tree_digraph:
          st.graphviz_chart( lgb.create_tree_digraph( model, tree_index , example_case = record_df ))
@@ -170,7 +173,8 @@ def show_booster_detail(df,model,show_prediction):
 def show_split_features(df , record_index , criteria_df ):
     for f in criteria_df.split_feature.unique().tolist():
         with st.expander(f"{f}: {df.iloc[record_index][f]}"):
-          st.dataframe(criteria_df.loc[criteria_df.split_feature == f , [ 'tree_index' ,'node_index' , 'split_feature','decision_type','threshold'] ].set_index('tree_index') )
+          st.dataframe(criteria_df.loc[criteria_df.split_feature == f , [ 'tree_index' ,'node_index' , 'split_feature','decision_type','threshold' , 'include_na'] ].set_index('tree_index') 
+                        ,  use_container_width=True)
 
 def plot_booster_prediction(leaf_output , tree_index):
 
