@@ -93,3 +93,76 @@ def get_parameter_df(model):
         model_configuration[k] = model_details[k]
 
     return pd.DataFrame([ model_configuration ]).T.reset_index(drop=False).set_axis(['key','value'], axis=1)
+
+def get_node_row(model_trees, tree_index, node_index):
+  return model_trees.loc[(model_trees.tree_index == tree_index) & (model_trees.node_index == node_index) ]
+
+def get_criteria_output_string(split_feature,decision_type, threshold, value , node_index ):
+  return f"( {node_index} {split_feature} {decision_type} {threshold} ) --> {value}"
+def get_criteria_output_collection(split_feature,decision_type, threshold, value , node_index ):
+    return {"node_index" : node_index ,
+          "split_feature": split_feature,
+          "decision_type" :decision_type,
+          "threshold": threshold ,
+          "value": value }
+def get_negative_decision_type(decision_type):
+  assert decision_type in ['<=','>=']
+  if decision_type == '<=':
+    return 'is na or >'
+  if decision_type == '>=':
+    return 'is na or <'
+
+
+def get_criteria(model_trees, tree_index, node_index, output_function ):
+
+  node_row = get_node_row(model_trees, tree_index, node_index)
+  node_value = node_row['value'].values[0]
+  parent_index = node_row['parent_index'].values[0]
+  assert not( parent_index is None )
+  parent_node_row = get_node_row(model_trees, tree_index, parent_index)
+  split_feature = parent_node_row['split_feature'].values[0]
+  decision_type = parent_node_row['decision_type'].values[0]
+
+  threshold = parent_node_row['threshold'].values[0]
+  left_child = parent_node_row['left_child'].values[0]
+  right_child = parent_node_row['right_child'].values[0]
+  if left_child == node_index :
+    criteria = output_function(split_feature,decision_type, threshold, node_value, node_index) #f"( {split_feature} {decision_type} {threshold} )"
+  if right_child == node_index :
+    criteria = output_function(split_feature,get_negative_decision_type(decision_type), threshold, node_value , node_index ) #f"( {split_feature} {get_negative_decision_type(decision_type)} {threshold} )"
+  return  criteria
+
+def get_nested_criteria(model_trees, tree_index, node_index, output_function = get_criteria_output_string, criteria_list=[]):
+  node_row = get_node_row(model_trees, tree_index, node_index)
+  parent_index = node_row['parent_index'].values[0]
+  if parent_index is None:
+    return criteria_list
+  criteria = get_criteria(model_trees, tree_index, node_index,output_function)
+  criteria_list = criteria_list + [criteria]
+  return get_nested_criteria(model_trees, tree_index, parent_index, criteria_list=criteria_list,output_function=output_function)
+
+def get_booster_nested_criteria(model_trees, tree_index_list , node_index_list , output_function=get_criteria_output_collection ):
+    criteria_df = pd.DataFrame()
+    assert len(tree_index_list)==len(node_index_list)
+    for i in range(len(tree_index_list)):
+      tree_index = tree_index_list[i]
+      node_index = node_index_list[i]
+      tree_criteria_df = pd.DataFrame( get_nested_criteria(model_trees, tree_index, node_index, output_function =output_function ) )
+      tree_criteria_df['tree_index'] = tree_index
+      #tree_criteria_df['node_index'] = node_index
+
+      criteria_df = pd.concat([criteria_df ,tree_criteria_df ] , ignore_index=True )
+    return criteria_df
+
+def aggregate_criteria(criteria_df):
+  criteria_df['max_threshold'] = criteria_df.groupby(['split_feature','decision_type'])['threshold'].transform('max')
+  criteria_df['min_threshold'] = criteria_df.groupby(['split_feature','decision_type'])['threshold'].transform('min')
+  criteria_df = criteria_df[['split_feature','decision_type','min_threshold','max_threshold']].drop_duplicates().reset_index(drop=True)
+  assert len(  set(criteria_df.decision_type.unique().tolist() ) - set(['>','<=','<','>='])  ) == 0
+  criteria_df['boundary_value'] = np.nan
+  criteria_df.loc[criteria_df['decision_type'] == '>' ,'boundary_value'] = criteria_df['max_threshold']
+  criteria_df.loc[criteria_df['decision_type'] == '<' ,'boundary_value'] = criteria_df['min_threshold']
+  criteria_df.loc[criteria_df['decision_type'] == '>=' ,'boundary_value'] = criteria_df['max_threshold']
+  criteria_df.loc[criteria_df['decision_type'] == '<=' ,'boundary_value'] = criteria_df['min_threshold']
+  return criteria_df[['split_feature','decision_type','boundary_value']]
+      

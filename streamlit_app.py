@@ -23,6 +23,8 @@ st.sidebar.markdown("[Validation](#validation)")
 #st.divider()
 st.sidebar.title("Analysis")
 st.sidebar.markdown("[Prediction](#prediction)")
+st.sidebar.markdown("[Booster Detail](#booster)")
+st.sidebar.markdown("[Individual Tree Detail](#tree)")
 
 
 
@@ -49,8 +51,10 @@ dataset_validation = static_components.dataset_validation(df,model)
 
 st.header('Prediction', anchor = 'prediction') 
 show_prediction = static_components.show_prediction(df,model,dataset_validation)
-static_components.show_prediction_history(df,model,show_prediction) 
 
+tree_index, target_index = static_components.show_booster_detail(df,model,show_prediction) 
+
+   
 #st.write('Hi!')
 def check_df_column_type(df, selected_columns):
   bypass_features = ["pending_error_count_4_8_positive_lag", "pending_error_count_4_8_negative_lag"]
