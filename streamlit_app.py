@@ -16,12 +16,14 @@ from pandas.api.types import is_numeric_dtype
 import static_components
 import lgbm_helper
 
-st.sidebar.title("Input")
+st.sidebar.title("LGBM Openbox")
+
+st.sidebar.header("Input")
 st.sidebar.markdown("[Model Upload](#model_upload)")
 st.sidebar.markdown("[Data Upload](#data_upload)")
 st.sidebar.markdown("[Validation](#validation)")
 #st.divider()
-st.sidebar.title("Analysis")
+st.sidebar.header("Analysis")
 st.sidebar.markdown("[Prediction](#prediction)")
 st.sidebar.markdown("[Booster Detail](#booster)")
 st.sidebar.markdown("[Individual Tree Detail](#tree)")
