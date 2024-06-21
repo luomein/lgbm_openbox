@@ -87,6 +87,8 @@ def get_parameter_df(model):
     bst =  get_booster(model)
     model_details = bst.dump_model()
     model_configuration = dict()
+    for k in bst.params.keys() :
+       model_configuration[k] =  bst.params[k]
     for k in model_details.keys():
       if not k in ['tree_info' , 'feature_names' , 'feature_importances' , 'feature_infos'] :
       #print(k , model_details[k])
