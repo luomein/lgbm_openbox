@@ -17,18 +17,6 @@ import static_components
 import lgbm_helper
 import tempfile
 
-st.sidebar.title("LGBM Openbox")
-
-st.sidebar.header("Input")
-st.sidebar.markdown("[Model Upload](#model_upload)")
-st.sidebar.markdown("[Data Upload](#data_upload)")
-st.sidebar.markdown("[Validation](#validation)")
-#st.divider()
-st.sidebar.header("Analysis")
-st.sidebar.markdown("[Prediction](#prediction)")
-st.sidebar.markdown("[Booster Detail](#booster)")
-st.sidebar.markdown("[Individual Tree Detail](#tree)")
-st.sidebar.divider()
 
 
 
@@ -43,10 +31,6 @@ model = lgbm_helper.get_model_write_to_temp_file(st.file_uploader("Upload your l
 
 tree_summary_df = static_components.model_summary_tabs(model)
 ## tree_index = st.slider("tree_index", tree_detail.tree_index.min(), tree_detail.tree_index.max() )
-tree_index = None
-if tree_summary_df is not None:
-  tree_index= st.sidebar.slider("tree_index", tree_summary_df.tree_index.min(), tree_summary_df.tree_index.max() )
-
 
 st.header('Data Upload' , anchor = 'data_upload')
 def get_dataframe(filepath_or_bufferstr):
@@ -57,6 +41,30 @@ def get_dataframe(filepath_or_bufferstr):
 
 df =  get_dataframe( st.file_uploader("Upload your dataset", type={"csv"} ) )
 static_components.dataset_summary_tabs(df)
+
+st.header('Validation' , anchor = 'validation')
+dataset_validation = static_components.dataset_validation(df,model)
+
+
+st.sidebar.title("LGBM Openbox")
+
+st.sidebar.header("Input")
+st.sidebar.markdown(f"[Model Upload ({str(len(tree_summary_df.tree_index.unique()) ) + ' trees' if tree_summary_df is not None else ' '})](#model_upload)")
+st.sidebar.markdown(f"[Data Upload {df.shape if df is not None else '( )'}](#data_upload)")
+st.sidebar.header("Output")
+
+st.sidebar.markdown(f"[Validation ({'✅' if dataset_validation else ('⚠️ ' if dataset_validation is not None else '' ) })](#validation)")
+st.sidebar.markdown("[Prediction](#prediction)")
+
+#st.divider()
+st.sidebar.header("Analysis")
+
+
+tree_index = None
+if tree_summary_df is not None:
+  tree_index= st.sidebar.slider("tree_index", tree_summary_df.tree_index.min(), tree_summary_df.tree_index.max() )
+
+
 
 if df is None or len(df) == 0:
   record_index = -1
@@ -69,14 +77,18 @@ elif len(df) == 1:
 else :
     record_index = -1
 
-st.header('Validation' , anchor = 'validation')
-dataset_validation = static_components.dataset_validation(df,model)
 
 st.header('Prediction', anchor = 'prediction') 
 show_prediction = static_components.show_prediction(df,model,dataset_validation , record_index)
 
+
+
+
 static_components.show_booster_detail(df,model,show_prediction,tree_index, record_index) 
 
    
+st.sidebar.markdown(f"[Booster Detail (record_index: {record_index if record_index > -1 else ''})](#booster)")
+st.sidebar.markdown(f"[Individual Tree Detail (tree_index: {tree_index if tree_index is not None else ''}, record_index: {record_index if record_index > -1 else ''})](#tree)")
+#st.sidebar.divider()
 
 

@@ -95,6 +95,7 @@ def dataset_summary_tabs(df):
 def dataset_validation(df,model):
     if df is None or model is None :
         st.write('empty')
+        return None
     else:
         if len(df) == 0 :
             st.write('⚠️  Dataset is empty')
