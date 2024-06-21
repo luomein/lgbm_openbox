@@ -41,6 +41,10 @@ def model_summary_features_df(model):
 
 def model_summary_parameters_df(model):
     if not model is None :
+      #bst =  lgbm_helper.get_booster(model)
+
+      #st.write(bst.params)
+
       st.dataframe(lgbm_helper.get_parameter_df(model), use_container_width=True)
     else:
         st.write('empty')

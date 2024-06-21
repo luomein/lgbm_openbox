@@ -15,6 +15,7 @@ import plotly.express as px
 from pandas.api.types import is_numeric_dtype
 import static_components
 import lgbm_helper
+import tempfile
 
 st.sidebar.title("LGBM Openbox")
 
@@ -33,7 +34,13 @@ st.sidebar.divider()
 
 st.header('Model Upload' , anchor = 'model_upload')
 static_components.model_txt_hint_expander()
-model = lgbm_helper.get_model(st.file_uploader("Upload your lgbm model file", type={"txt"}))
+#model_test = lgbm_helper.get_model_write_to_temp_file(st.file_uploader("test your lgbm model file", type={"txt"}))
+model = lgbm_helper.get_model_write_to_temp_file(st.file_uploader("Upload your lgbm model file", type={"txt"}))
+
+#model = lgbm_helper.get_model(st.file_uploader("Upload your lgbm model file", type={"txt"}))
+#bst =  lgbm_helper.get_booster(model)
+#st.write(bst.params)
+
 tree_summary_df = static_components.model_summary_tabs(model)
 ## tree_index = st.slider("tree_index", tree_detail.tree_index.min(), tree_detail.tree_index.max() )
 tree_index = None

@@ -2,6 +2,25 @@
 import lightgbm as lgb
 import io
 import pandas as pd
+import tempfile
+import os
+
+def get_model_write_to_temp_file(uploaded_model_file):
+ if uploaded_model_file is not None:
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # Define the path to save the uploaded file
+        temp_file_path = os.path.join(tmpdir, uploaded_model_file.name)
+        
+        # Save the file to the temporary directory
+        with open(temp_file_path, 'wb') as f:
+            f.write(uploaded_model_file.read())
+        
+        # Display the path of the temporary file
+        #st.write(f"File saved to temporary path: {temp_file_path}")
+        model = lgb.Booster(model_file=temp_file_path)
+        #st.dataframe(data=model.trees_to_dataframe())
+        return model
 
 
 def get_model(uploaded_model_file):
