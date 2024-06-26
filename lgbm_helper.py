@@ -72,9 +72,12 @@ def get_feature_summary_df(model):
     max_vals = []
 
     for feature in feature_names:
-      min_val = feature_infos[feature]['min_value']
-      max_val = feature_infos[feature]['max_value']
-
+      if feature in   feature_infos :
+       min_val = feature_infos[feature]['min_value']
+       max_val = feature_infos[feature]['max_value']
+      else :
+          min_val = ''
+          max_val = ''
       min_vals.append(min_val)
       max_vals.append(max_val)
 
