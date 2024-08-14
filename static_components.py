@@ -5,6 +5,7 @@ import plotly.figure_factory as ff
 import plotly.express as px
 import plotly.graph_objects as go
 import lightgbm as lgb
+import matplotlib.pyplot as plt
 
 
 def model_txt_hint_expander():
@@ -52,18 +53,25 @@ def model_summary_parameters_df(model):
 def model_summary_tabs(model):
   st.write('Model Summary')  
   if model is None :
-   model_parameters, model_features , model_trees = st.tabs(["Parameters" , "Features" , "Trees"])
+   model_parameters, model_features , model_trees , tree_split_gain, feature_split_value = st.tabs(["Parameters" , "Feature Importance" , "Trees", "Tree Split Gain", "Feature Split Value"])
    with model_parameters:
     st.write('empty')
    with  model_features :
     st.write('empty')
    with model_trees :
     st.write('empty')
+   with tree_split_gain:
+    st.write('empty')
+   with feature_split_value:
+    st.write('empty')
+
    return None
   else:
       feature_summary_df = lgbm_helper.get_feature_summary_df(model)
       tree_summary_df = lgbm_helper.get_tree_summary(model)
-      model_parameters, model_features , model_trees = st.tabs(["Parameters" , f"Features({len(feature_summary_df)})" , f"Trees({len(tree_summary_df)})"])
+      bst =  lgbm_helper.get_booster(model)
+      tree_detail = bst.trees_to_dataframe()
+      model_parameters, model_features , model_trees, tree_split_gain , feature_split_value = st.tabs(["Parameters" , f"Feature Importance({len(feature_summary_df)})" , f"Trees({len(tree_summary_df)})", "Tree Split Gain",  "Feature Split Value"])
 
       with model_parameters:
         #st.write(dir(model_parameters))
@@ -72,6 +80,18 @@ def model_summary_tabs(model):
         st.dataframe(feature_summary_df, use_container_width=True)
       with model_trees:
           st.dataframe(tree_summary_df, use_container_width=True)
+      with tree_split_gain:
+          fig = px.box(tree_detail, x="tree_index", y="split_gain")
+          fig.update_layout(yaxis_type="log")
+          st.plotly_chart(fig, use_container_width=True)
+      with feature_split_value:
+        option = st.selectbox(  "Select Feature", feature_summary_df.Feature.values.tolist() ,  index=None,  placeholder="-----")    
+        if not option is None :
+          fig, ax = plt.subplots()
+          lgb.plot_split_value_histogram(bst , option , ax = ax)
+          st.pyplot(fig)
+          st.dataframe(tree_detail[tree_detail['split_feature'] == option], use_container_width=True)
+
       return tree_summary_df
 def dataset_summary_tabs(df):
     st.write('Dataset Summary')
